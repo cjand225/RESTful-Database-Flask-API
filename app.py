@@ -15,13 +15,22 @@ db_name = 'classproject'
 db_connect = engine = create_engine('mysql://' + db_user + ':' + db_pass + '@' + db_host + '/' + db_name)
 api = Api(app)
 
+
 @app.route('/')
 def hello_world():
     return 'Hello World!'
 
+
 @app.route('/status')
 def getStatus():
-    return 'Hi'
+    conn = db_connect.connect()
+    status = ''
+    if conn:
+        status = {"status_code": 1}
+    else:
+        status = {"status_code": 2}
+
+    return jsonify(status)
 
 
 if __name__ == '__main__':
