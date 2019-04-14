@@ -20,15 +20,14 @@ api = Api(app)
 def hello_world():
     return 'Hello World!'
 
-
 @app.route('/status')
 def getStatus():
     conn = db_connect.connect()
-    status = ''
-    if conn:
+    status = {"status_code": -1}
+    if conn.connection:
         status = {"status_code": 1}
-    else:
-        status = {"status_code": 2}
+    elif conn.closed:
+        status = {"status_code": 0}
 
     return jsonify(status)
 
