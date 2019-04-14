@@ -13,15 +13,21 @@ db_connect = engine = create_engine('mysql://' + db_user + ':' + db_pass + '@' +
 app = Flask(__name__)
 api = Api(app)
 
-from flask_restful import Resource, Api
+
+class getStatus(Resource):
+    def get(self):
+        result = {'status': 1}
+        return jsonify(result)
+
 
 class getPatient(Resource):
     def get(self, pid):
         conn = db_connect.connect()
 
 
+api.add_resource(getStatus, '/status')
 
-#api.add_resource(Service, )
+# api.add_resource(Service, )
 
 
 if __name__ == '__main__':
