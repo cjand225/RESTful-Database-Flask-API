@@ -13,51 +13,16 @@ db_connect = engine = create_engine('mysql://' + db_user + ':' + db_pass + '@' +
 app = Flask(__name__)
 api = Api(app)
 
+from flask_restful import Resource, Api
 
-class Service(Resource):
-    def get(self, service_id):
-        pass
-
-    def remove(self, service_id):
-        pass
-
-    def add(self, ):
-        pass
+class getPatient(Resource):
+    def get(self, pid):
+        conn = db_connect.connect()
 
 
-class Provider(Resource):
-    def get(self, npi):
-        pass
 
-    def remove(self, npi):
-        pass
+#api.add_resource(Service, )
 
-    def add(self, ):
-        pass
-
-
-class Patient(Resource):
-    def get(self, npi):
-        pass
-
-    def remove(self, npi):
-        pass
-
-    def add(self, ):
-        pass
-
-
-class PatientData(Resource):
-    def get(self, npi):
-        pass
-
-    def add(self, ):
-        pass
-
-
-api.add_resource(Employees, '/employees')  # Route_1
-api.add_resource(Tracks, '/tracks')  # Route_2
-api.add_resource(Employees_Name, '/employees/<employee_id>')  # Route_3
 
 if __name__ == '__main__':
     app.run()
