@@ -4,10 +4,10 @@ from flask_restful import Resource, Api
 from sqlalchemy import create_engine
 from json import dumps
 
-db_host = ''
-db_user = ''
-db_pass = ''
-db_name = ''
+db_host = 'cjan225.netlab.uky.edu, port 3306'
+db_user = 'projectuser'
+db_pass = 'cs405'
+db_name = 'classproject'
 
 db_connect = engine = create_engine('mysql://' + db_user + ':' + db_pass + '@' + db_host + '/' + db_name)
 app = Flask(__name__)
