@@ -3,6 +3,8 @@ from flask_restful import Resource, Api
 from sqlalchemy import create_engine
 from json import dumps
 
+# export FLASK_APP=CS405GFinalPython:app
+# flask run
 app = Flask(__name__)
 
 db_host = 'cjan225.netlab.uky.edu'
@@ -11,24 +13,15 @@ db_pass = 'cs405'
 db_name = 'classproject'
 
 db_connect = engine = create_engine('mysql://' + db_user + ':' + db_pass + '@' + db_host + '/' + db_name)
-app = Flask(__name__)
 api = Api(app)
-
-
-class getStatus(Resource):
-    def get(self):
-        result = {'status': 1}
-        return jsonify(result)
-
 
 @app.route('/')
 def hello_world():
     return 'Hello World!'
 
-
 @app.route('/status')
 def getStatus():
-    return
+    return 'Hi'
 
 
 if __name__ == '__main__':
