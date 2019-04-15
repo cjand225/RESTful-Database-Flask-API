@@ -12,21 +12,17 @@ db_user = 'projectuser'
 db_pass = 'cs405'
 db_name = 'classproject'
 
-db_connect = engine = create_engine('mysql://' + db_user + ':' + db_pass + '@' + db_host + '/' + db_name)
+db_connect = create_engine('mysql://' + db_user + ':' + db_pass + '@' + db_host + '/' + db_name)
 api = Api(app)
 
 
-@app.route('/')
-def hello_world():
-    return 'Hello World!'
-
-@app.route('/status')
+@app.route('/status', methods=['GET'])
 def getStatus():
     conn = db_connect.connect()
     status = {"status_code": -1}
-    if conn.connection:
+    if conn:
         status = {"status_code": 1}
-    elif conn.closed:
+    elif conn:
         status = {"status_code": 0}
 
     return jsonify(status)
