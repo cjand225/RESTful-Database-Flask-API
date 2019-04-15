@@ -16,13 +16,18 @@ db_connect = create_engine('mysql://' + db_user + ':' + db_pass + '@' + db_host 
 api = Api(app)
 
 
-@app.route('/status', methods=['GET'])
+@app.route('/api')
+def apiEndPoint():
+    return "Team API"
+
+
+@app.route('/api/status', methods=['GET'])
 def getStatus():
     conn = db_connect.connect()
     status = {"status_code": -1}
-    if conn:
+    if not conn.closed:
         status = {"status_code": 1}
-    elif conn:
+    elif conn.closed:
         status = {"status_code": 0}
 
     return jsonify(status)
