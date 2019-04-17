@@ -43,6 +43,7 @@ def getStatus():
 def getService(service_id):
     if request.method == "GET":
         serv_id = service_id
+        # do stuff here with it
         response = 'NULL'
         return jsonify(response)
 
@@ -51,6 +52,7 @@ def getService(service_id):
 def getPatient(patient_id):
     if request.method == "GET":
         pid = patient_id
+        # do stuff here with it
         response = 'NULL'
         return jsonify(response)
 
@@ -59,6 +61,7 @@ def getPatient(patient_id):
 def getProvider(provider_id):
     if request.method == "GET":
         prov_id = provider_id
+        # do stuff here with it
         response = 'NULL'
         return jsonify(response)
 
@@ -68,6 +71,7 @@ def getProvider(provider_id):
 def getData(data_id):
     if request.method == "GET":
         dat_id = data_id
+        # do stuff here with it
         response = 'NULL'
         return jsonify(response)
 
@@ -81,6 +85,8 @@ def addService():
         attempted_service = request.form['service_id']
         attempted_tax = request.form['taxid']
         # do stuff here with it
+        response = 'NULL'
+        return jsonify(response)
 
 
 @app.route('/api/addpatient/', methods=['POST'])
@@ -90,6 +96,8 @@ def addPatient():
         attempted_provider = request.form['provider_id']
         attempted_pid = request.form['pid']
         attempted_ssn = request.form['ssn']
+        response = 'NULL'
+        return jsonify(response)
 
 
 @app.route('/api/addprovider/', methods=['POST'])
@@ -97,6 +105,8 @@ def addProvider():
     if request.method == "POST":
         attempted_dept = request.form['department_id']
         attempted_npi = request.form['npi']
+        response = 'NULL'
+        return jsonify(response)
 
 
 @app.route('/api/adddata/', methods=['POST'])
@@ -107,6 +117,10 @@ def addData():
         attempted_sid = request.form['service_id']
         attempted_provid = request.form['provider_id']
         attempted_did = request.form['id']
+        # do stuff here with it
+        response = 'NULL'
+        return jsonify(response)
+
 
 
 # Remove-----------------------------------------
@@ -114,6 +128,7 @@ def addData():
 def removeService(service_id):
     if request.method == "GET":
         idRemoved = service_id
+        # do stuff here with it
         response = 'NULL'
         return jsonify(response)
 
@@ -122,6 +137,7 @@ def removeService(service_id):
 def removePatient(pid):
     if request.method == "GET":
         pidRemvoed = pid
+        # do stuff here with it
         response = 'NULL'
         return jsonify(response)
 
@@ -130,6 +146,7 @@ def removePatient(pid):
 def removeProvider(npi):
     if request.method == "GET":
         npiRemoved = npi
+        # do stuff here with it
         response = 'NULL'
         return jsonify(response)
 
