@@ -1,21 +1,38 @@
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
-from sqlalchemy import create_engine
 from json import dumps
 
-# export FLASK_APP=CS405GFinalPython:app
-# flask run
+from db import Base, Location, Department, Provider, Patient, Data, Service, Institution
+
+import datetime
+from sqlalchemy import create_engine, ForeignKey, Table, MetaData, Column, Integer, String, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, backref
+
 app = Flask(__name__)
 
 db_host = 'cjan225.netlab.uky.edu'
-db_user = 'projectuser'
-db_pass = 'cs405'
-db_name = 'classproject'
+db_user = 'testuser'
+db_pass = 'test'
+db_name = 'testdb'
+
+# db_user = 'projectuser'
+# db_pass = 'cs405'
+# db_name = 'classproject'
 
 db_connect = create_engine('mysql://' + db_user + ':' + db_pass + '@' + db_host + '/' + db_name)
 api = Api(app)
 
+# -------DB declarations--------
 
+
+
+Base.metadata.drop_all(db_connect)
+Base.metadata.create_all(db_connect)
+print('DB Created!')
+
+
+# ---------API-------------------
 @app.route('/')
 def welcome():
     return "I think you're lost :)"
@@ -64,7 +81,6 @@ def getProvider(provider_id):
         # do stuff here with it
         response = 'NULL'
         return jsonify(response)
-
 
 
 @app.route('/api/getdata/<int:data_id>', methods=['GET'])
@@ -122,7 +138,6 @@ def addData():
         return jsonify(response)
 
 
-
 # Remove-----------------------------------------
 @app.route('/api/removeservice/<int:service_id>', methods=['GET'])
 def removeService(service_id):
@@ -149,6 +164,22 @@ def removeProvider(npi):
         # do stuff here with it
         response = 'NULL'
         return jsonify(response)
+
+#s
+def init_db():
+    pass
+
+
+# db = get_db()
+# with app.open_resource('schema.sql', mode='r') as f:
+# db.cursor().executescript(f.read())
+# db.commit()
+
+@app.cli.command('initdb')
+def initdb_command():
+    """Initializes the database."""
+    init_db()
+    print('Initialized the database.')
 
 
 if __name__ == '__main__':
