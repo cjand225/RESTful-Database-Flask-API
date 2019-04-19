@@ -1,35 +1,45 @@
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
+from flask_sqlalchemy import SQLAlchemy
 from json import dumps
 
 from db import Base, Location, Department, Provider, Patient, Data, Service, Institution
 
-import datetime
-from sqlalchemy import create_engine, ForeignKey, Table, MetaData, Column, Integer, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import create_engine, ForeignKey, Table, MetaData, Column, Integer, String, DateTime, inspect, delete, \
+    select, insert, schema, types
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine.url import URL
+from sqlalchemy.exc import IntegrityError
+import uuid
 
-app = Flask(__name__)
+# db_user = 'projectuser'
+# db_pass = 'cs405'
+# db_name = 'classproject'
 
 db_host = 'cjan225.netlab.uky.edu'
 db_user = 'testuser'
 db_pass = 'test'
 db_name = 'testdb'
 
-# db_user = 'projectuser'
-# db_pass = 'cs405'
-# db_name = 'classproject'
+db = {'drivername': 'mysql',
+      'username': 'testuser',
+      'password': 'test',
+      'host': 'cjan225.netlab.uky.edu',
+      'port': 3306,
+      'database': 'testdb'}
 
-db_connect = create_engine('mysql://' + db_user + ':' + db_pass + '@' + db_host + '/' + db_name)
+url = URL(**db)
+app = Flask(__name__)
+engine = create_engine(url)
 api = Api(app)
 
 # -------DB declarations--------
 
 
-
-Base.metadata.drop_all(db_connect)
-Base.metadata.create_all(db_connect)
+Base.metadata.drop_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 print('DB Created!')
+print(engine.url)
 
 
 # ---------API-------------------
@@ -45,141 +55,184 @@ def apiEndPoint():
 
 @app.route('/api/status', methods=['GET'])
 def getStatus():
-    conn = db_connect.connect()
+    conn = engine.connect()
     status = {"status_code": -1}
     if not conn.closed:
         status = {"status_code": 1}
     elif conn.closed:
         status = {"status_code": 0}
-
     return jsonify(status)
 
 
 # Get--------------------------------------------------------
-@app.route('/api/getservice/<int:service_id>', methods=['GET'])
+@app.route('/api/getservice/<service_id>', methods=['GET'])
 def getService(service_id):
     if request.method == "GET":
-        serv_id = service_id
-        # do stuff here with it
-        response = 'NULL'
+        sessionMake = sessionmaker(bind=engine)
+        currSession = sessionMake()
+        query = currSession.query(Service, Service.id).filter_by(id=service_id)
+        result = currSession.execute(query)
+        response = giveResponse(result)
+        currSession.commit()
+        currSession.close()
         return jsonify(response)
 
 
-@app.route('/api/getpatient/<int:patient_id>', methods=['GET'])
+@app.route('/api/getpatient/<patient_id>', methods=['GET'])
 def getPatient(patient_id):
     if request.method == "GET":
-        pid = patient_id
-        # do stuff here with it
-        response = 'NULL'
+        sessionMake = sessionmaker(bind=engine)
+        currSession = sessionMake()
+        query = currSession.query(Service, Patient.pid).filter_by(id=patient_id)
+        result = currSession.execute(query)
+        response = giveResponse(result)
+        currSession.commit()
+        currSession.close()
         return jsonify(response)
 
 
-@app.route('/api/getprovider/<int:provider_id>', methods=['GET'])
+@app.route('/api/getprovider/<provider_id>', methods=['GET'])
 def getProvider(provider_id):
     if request.method == "GET":
-        prov_id = provider_id
-        # do stuff here with it
-        response = 'NULL'
+        sessionMake = sessionmaker(bind=engine)
+        currSession = sessionMake()
+        query = currSession.query(Provider, Provider.npi).filter_by(id=provider_id)
+        result = currSession.execute(query)
+        response = giveResponse(result)
+        currSession.commit()
+        currSession.close()
         return jsonify(response)
 
 
-@app.route('/api/getdata/<int:data_id>', methods=['GET'])
+@app.route('/api/getdata/<data_id>', methods=['GET'])
 def getData(data_id):
     if request.method == "GET":
-        dat_id = data_id
-        # do stuff here with it
-        response = 'NULL'
+        sessionMake = sessionmaker(bind=engine)
+        currSession = sessionMake()
+        query = currSession.query(Data, Data.id).filter_by(id=data_id)
+        result = currSession.execute(query)
+        response = giveResponse(result)
+        currSession.commit()
+        currSession.close()
         return jsonify(response)
 
 
 # Add--------------------------------------------
-@app.route('/api/addservice/', methods=['POST'])
+@app.route('/api/addservice', methods=['POST'])
 def addService():
     if request.method == "POST":
-        attempted_address = request.form['address']
-        attempted_dept = request.form['department_id']
-        attempted_service = request.form['service_id']
-        attempted_tax = request.form['taxid']
-        # do stuff here with it
-        response = 'NULL'
+        data = request.get_json(force=True)
+        attempted_address = data['address']
+        attempted_dept = data['department_id']
+        attempted_service = data['service_id']
+        attempted_tax = data['taxid']
+
+        nLocation = Location(address=attempted_address)
+        nInstitution = Institution(tid=attempted_tax)
+        nDepartment = Department(id=attempted_dept, institution_id=nInstitution.id)
+        nService = Service(id=attempted_service, department_id=nDepartment.id, location_id=nLocation.lid)
+
+        response = dbAdd([nLocation, nInstitution, nDepartment, nService])
+
         return jsonify(response)
 
 
 @app.route('/api/addpatient/', methods=['POST'])
 def addPatient():
     if request.method == "POST":
-        attempted_address = request.form['address']
-        attempted_provider = request.form['provider_id']
-        attempted_pid = request.form['pid']
-        attempted_ssn = request.form['ssn']
-        response = 'NULL'
+        data = request.get_json(force=True)
+        attempted_address = data['address']
+        attempted_provider = data['provider_id']
+        attempted_pid = data['pid']
+        attempted_ssn = data['ssn']
+        lid = uuid.uuid4()
+
+        response = dbAdd([])
         return jsonify(response)
 
 
 @app.route('/api/addprovider/', methods=['POST'])
 def addProvider():
     if request.method == "POST":
-        attempted_dept = request.form['department_id']
-        attempted_npi = request.form['npi']
-        response = 'NULL'
+        data = request.get_json(force=True)
+        attempted_dept = data['department_id']
+        attempted_npi = data['npi']
+        response = dbAdd([])
         return jsonify(response)
 
 
 @app.route('/api/adddata/', methods=['POST'])
 def addData():
     if request.method == "POST":
-        attempted_data = request.form['data']
-        attempted_pid = request.form['patient_id']
-        attempted_sid = request.form['service_id']
-        attempted_provid = request.form['provider_id']
-        attempted_did = request.form['id']
-        # do stuff here with it
-        response = 'NULL'
+        data = request.get_json(force=True)
+        attempted_data = data['data']
+        attempted_pid = data['patient_id']
+        attempted_sid = data['service_id']
+        attempted_provid = data['provider_id']
+        attempted_did = data['id']
+        response = dbAdd([])
         return jsonify(response)
 
 
 # Remove-----------------------------------------
-@app.route('/api/removeservice/<int:service_id>', methods=['GET'])
+@app.route('/api/removeservice/<service_id>', methods=['GET'])
 def removeService(service_id):
     if request.method == "GET":
-        idRemoved = service_id
-        # do stuff here with it
-        response = 'NULL'
+        deleteQuery = delete(Service, Service.id == service_id)
+        response = dbDelete(deleteQuery)
         return jsonify(response)
 
 
-@app.route('/api/removepatient/<int:pid>', methods=['GET'])
+@app.route('/api/removepatient/<pid>', methods=['GET'])
 def removePatient(pid):
     if request.method == "GET":
-        pidRemvoed = pid
-        # do stuff here with it
-        response = 'NULL'
+        deleteQuery = delete(Patient, Patient.pid == pid)
+        response = dbDelete(deleteQuery)
         return jsonify(response)
 
 
-@app.route('/api/removeprovider/<int:npi>', methods=['GET'])
+@app.route('/api/removeprovider/<npi>', methods=['GET'])
 def removeProvider(npi):
     if request.method == "GET":
-        npiRemoved = npi
-        # do stuff here with it
-        response = 'NULL'
+        deleteQuery = delete(Provider, Provider.npi == npi)
+        response = dbDelete(deleteQuery)
         return jsonify(response)
 
-#s
-def init_db():
-    pass
+
+def dbDelete(query):
+    sessionMake = sessionmaker(bind=engine)
+    currSession = sessionMake()
+    result = currSession.delete(query)
+    currSession.commit()
+    currSession.close()
+    return giveResponse(result)
 
 
-# db = get_db()
-# with app.open_resource('schema.sql', mode='r') as f:
-# db.cursor().executescript(f.read())
-# db.commit()
+def dbAdd(query):
+    sessionMake = sessionmaker(bind=engine)
+    currSession = sessionMake()
+    #result = currSession.add_all(query)
+    for q in query:
+        currSession.merge(q)
+    #currSession.merge()
+    currSession.commit()
+    currSession.close()
+    return 's'
 
-@app.cli.command('initdb')
-def initdb_command():
-    """Initializes the database."""
-    init_db()
-    print('Initialized the database.')
+
+def giveResponse(result):
+    response = {}
+
+    if result:
+        if result.returns_rows and result.rowcount > 0:
+            for row in result.fetchall():
+                response.update(row)
+        elif result.rowcount == 0:
+            response.update({'Error': 'Not Found'})
+    else:
+        response.update({'Status': '1'})
+
+    return response
 
 
 if __name__ == '__main__':

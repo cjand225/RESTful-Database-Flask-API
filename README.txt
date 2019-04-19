@@ -7,3 +7,6 @@
 # Location:      1 address
 # Data Source    <(Id)>, timestamp, 1 patient and 1 service
 
+
+# export FLASK_APP=CS405GFinalPython:app
+# flask run

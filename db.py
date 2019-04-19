@@ -2,36 +2,35 @@ import datetime
 from sqlalchemy import create_engine, ForeignKey, Table, MetaData, Column, Integer, String, DateTime, Sequence, \
     PrimaryKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
-
 from sqlalchemy.orm import relationship, backref
 
 Base = declarative_base()
-#s
 
 
 class Location(Base):
     __tablename__ = 'location'
-
-    lid = Column('lid', Integer, primary_key=True, unique=True, nullable=False)
+    # Columns
+    lid = Column(Integer, primary_key=True)
     address = Column('address', String(100))
+    # Relationship
+    services = relationship('Service')
 
-    services = relationship('Service', backref='service')
-
-    def __init__(self, lid, address):
-        self.lid = lid
-        self.address = address
+    def __repr__(self):
+        return "<Location(lid='%s', address='%s')>" % (
+            self.lid, self.address)
 
 
 class Institution(Base):
     __tablename__ = 'institution'
-    id = Column('id', Integer, primary_key=True, unique=True, nullable=False)
-    tid = Column('tid', Integer, unique=True, nullable=False)
+    # Columns
+    id = Column('id', String(100), primary_key=True)
+    tid = Column('tid', String(100))
+    # Relationship
+    departments = relationship('Department')
 
-    departments = relationship('Department', backref='department')
-
-    def __init__(self, id, tid):
-        self.id = id
-        self.tid = tid
+    def __repr__(self):
+        return "<Institution(id='%s', tid='%s')>" % (
+            self.id, self.tid)
 
 
 class Department(Base):
@@ -39,82 +38,73 @@ class Department(Base):
     __table_args__ = (
         PrimaryKeyConstraint('id', 'institution_id'),
     )
-    id = Column('id', Integer, unique=True, nullable=False)
-    institution_id = Column('institution_id', Integer, ForeignKey('institution.id'))
+    # Columns
+    id = Column('id', String(100))
+    institution_id = Column('institution_id', ForeignKey('institution.id'))
+    # Relationship
+    institution = relationship('Institution')
+    services = relationship('Service')
+    providers = relationship('Provider')
 
-    institution = relationship('Institution', backref='institution')
-    services = relationship('Service', backref='service')
-    providers = relationship('Provider', backref='provider')
-
-    def __init__(self, id, institution_id):
-        self.id = id
-        self.institution_id = institution_id
+    def __repr__(self):
+        return "<Department(id='%s', institution_id='%s')>" % (
+            self.id, self.institution_id)
 
 
 class Service(Base):
     __tablename__ = 'service'
-    id = Column('id', Integer, primary_key=True, unique=True, nullable=False)
-    location_id = Column('location_id', Integer, ForeignKey('location.lid'))
-    department_id = Column('department_id', Integer, ForeignKey('department.id'))
 
-    patientData = relationship('Data', backref='data')
+    # Columns
+    id = Column('id', String(100), primary_key=True)
+    location_id = Column('location_id', ForeignKey('location.lid'))
+    department_id = Column('department_id', ForeignKey('department.id'))
 
-    def __init__(self, id, location_id, department_id):
-        self.id = id
-        self.location_id = location_id
-        self.department_id = department_id
+    # Relationship
+    patientData = relationship('Data')
+
+    def __repr__(self):
+        return "<Service(id='%s', location_id='%s', department_id='%s')>" % (
+            self.id, self.location_id, self.department_id)
 
 
 class Provider(Base):
     __tablename__ = 'provider'
-    __table_args__ = (
-        PrimaryKeyConstraint('npi'),
-    )
-    npi = Column('npi', Integer, unique=True, nullable=False)
-    department_id = Column('department_id', Integer, ForeignKey('department.id'))
+    # Columns
+    npi = Column('npi', String(100), primary_key=True)
+    department_id = Column('department_id', ForeignKey('department.id'))
+    # Relationship
+    patients = relationship('Patient')
 
-    patients = relationship('Patient', backref='patient')
-
-    def __init__(self, npi, department_id):
-        self.npi = npi
-        self.department_id = department_id
+    def __repr__(self):
+        return "<Provider(npi='%s', department_id='%s')>" % (
+            self.npi, self.department_id)
 
 
 class Patient(Base):
     __tablename__ = 'patient'
-    __table_args__ = (
-        PrimaryKeyConstraint('pid', 'ssn'),
-    )
-
-    pid = Column('pid', Integer, unique=True, nullable=False)
-    ssn = Column('ssn', Integer)
+    # Columns
+    pid = Column('pid', String(100), primary_key=True)
+    ssn = Column('ssn', String(100))
     address = Column('address', String(100))
-    provider_id = Column('provider_id', Integer, ForeignKey('provider.npi'))
+    provider_id = Column('provider_id', ForeignKey('provider.npi'))
 
-    patientData = relationship('Data', backref='data')
+    # Relationship
+    patientData = relationship('Data')
 
-    def __init__(self, pid, ssn, address, provider_id):
-        self.pid = pid
-        self.ssn = ssn
-        self.address = address
-        self.provider_id = provider_id
+    def __repr__(self):
+        return "<Patient(pid='%s', ssn='%s', address='%s', provider_id='%s')>" % (
+            self.pid, self.ssn, self.address, self.provider_id)
 
 
 class Data(Base):
     __tablename__ = 'data'
-    __table_args__ = (
-        PrimaryKeyConstraint('id', 'patient_id'),
-    )
-
-    id = Column('id', Integer, unique=True, nullable=False)
+    # Columns
+    id = Column('id', String(100), primary_key=True)
     ts = Column('ts', DateTime, onupdate=datetime.datetime.utcnow)
-    patient_id = Column('patient_id', Integer, ForeignKey('patient.pid'))
-    service_id = Column('service_id', Integer, ForeignKey('service.id'))
+    patient_id = Column('patient_id', ForeignKey('patient.pid'))
+    service_id = Column('service_id', ForeignKey('service.id'))
     some_data = Column('some_data', String(200))
 
-    def __init__(self, id, ts, patient_id, service_id, some_data):
-        self.id = id
-        self.ts = ts
-        self.patient_id = patient_id
-        self.service_id = service_id
-        self.some_data = some_data
+    def __repr__(self):
+        return "<Data(id='%s', ts='%s', patient_id='%s', service_id='%s', some_data='%s')>" % (
+            self.id, self.ts, self.patient_id, self.service_id, self.some_data)
