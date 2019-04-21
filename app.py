@@ -71,7 +71,8 @@ def getService(service_id):
     if request.method == "GET":
         sessionMake = sessionmaker(bind=engine)
         currSession = sessionMake()
-        query = currSession.query(Service, Service.id).filter_by(id=service_id)
+        query = currSession.query(Service, Service.id).filter(Service.id == service_id)
+        query.join(Service.location)
         print(query)
         result = currSession.execute(query)
         response = giveResponse(result)
@@ -129,19 +130,33 @@ def addService():
         attempted_service = data['service_id']
         attempted_tax = data['taxid']
 
-        nLocation = Location(address=attempted_address)
-        nInstitution = Institution(tid=attempted_tax)
-        nDepartment = Department(id=attempted_dept, institution_id=nInstitution.id)
-        nService = Service(id=attempted_service, department_id=nDepartment.id, location_id=nLocation.lid)
-
+        result = ''
         sessionMake = sessionmaker(bind=engine)
         currSession = sessionMake()
-        query = currSession.query(nService)
-        result = currSession.execute(query)
-        #response = dbAdd([nLocation, nInstitution, nDepartment, nService])
+
+        nLocation = Location(address=attempted_address)
+
+        nInstitution = Institution(tid=attempted_tax)
+        nDepartment = Department(id=attempted_dept, institution_id=nInstitution.id)
+
+        try:
+            result = currSession.add_all([nLocation, nDepartment, nInstitution])
+        except IntegrityError:
+            pass
+        finally:
+            currSession.commit()
+
+        nService = Service(id=attempted_service, department_id=nDepartment.id, location_id=nLocation.lid)
+
+        try:
+            result = currSession.add_all([nService])
+        except IntegrityError:
+            pass
+        finally:
+            currSession.commit()
+            currSession.close()
+
         response = giveResponse(result)
-        currSession.commit()
-        currSession.close()
         return jsonify(response)
 
 
@@ -165,6 +180,9 @@ def addProvider():
         data = request.get_json(force=True)
         attempted_dept = data['department_id']
         attempted_npi = data['npi']
+
+        nProvider = Provider()
+
         response = dbAdd([])
         return jsonify(response)
 
@@ -231,7 +249,6 @@ def dbAdd(query):
         pass
     finally:
         currSession.commit()
-        currSession.close()
         return result
 
 

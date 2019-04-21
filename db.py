@@ -10,14 +10,13 @@ Base = declarative_base()
 class Location(Base):
     __tablename__ = 'location'
     # Columns
-    lid = Column('lid', Integer, primary_key=True, autoincrement=True)
+    lid = Column('lid', Integer, unique=True, primary_key=True, autoincrement=True)
     address = Column('address', String(100))
     # Relationship
-    services = relationship('Service', cascade="save-update, merge, delete")
+    service = relationship('Service', cascade="save-update, merge, delete", back_populates="location")
 
     def __repr__(self):
-        return "<Location(lid='%s', address='%s')>" % (
-            self.lid, self.address)
+        return "<Location(lid='%s', address='%s')>" % (self.lid, self.address)
 
 
 class Institution(Base):
@@ -59,6 +58,7 @@ class Service(Base):
 
     # Relationship
     patientData = relationship('Data', cascade="save-update, merge, delete")
+    location = relationship('Location', back_populates='service', cascade="save-update, merge, delete")
 
     def __repr__(self):
         return "<Service(id='%s', location_id='%s', department_id='%s')>" % (
