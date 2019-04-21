@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from json import dumps
 
 from db import Base, Location, Department, Provider, Patient, Data, Service, Institution
+# from newdb import metadata, location, department, provider, patient, data, service, institution
 
 from sqlalchemy import create_engine, ForeignKey, Table, MetaData, Column, Integer, String, DateTime, inspect, delete, \
     select, insert, schema, types
@@ -71,6 +72,7 @@ def getService(service_id):
         sessionMake = sessionmaker(bind=engine)
         currSession = sessionMake()
         query = currSession.query(Service, Service.id).filter_by(id=service_id)
+        print(query)
         result = currSession.execute(query)
         response = giveResponse(result)
         currSession.commit()
@@ -132,8 +134,14 @@ def addService():
         nDepartment = Department(id=attempted_dept, institution_id=nInstitution.id)
         nService = Service(id=attempted_service, department_id=nDepartment.id, location_id=nLocation.lid)
 
-        response = dbAdd([nLocation, nInstitution, nDepartment, nService])
-
+        sessionMake = sessionmaker(bind=engine)
+        currSession = sessionMake()
+        query = currSession.query(nService)
+        result = currSession.execute(query)
+        #response = dbAdd([nLocation, nInstitution, nDepartment, nService])
+        response = giveResponse(result)
+        currSession.commit()
+        currSession.close()
         return jsonify(response)
 
 
@@ -200,24 +208,31 @@ def removeProvider(npi):
 
 
 def dbDelete(query):
+    result = ''
     sessionMake = sessionmaker(bind=engine)
     currSession = sessionMake()
-    result = currSession.delete(query)
-    currSession.commit()
-    currSession.close()
-    return giveResponse(result)
+    try:
+        result = currSession.delete(query)
+    except IntegrityError:
+        pass
+    finally:
+        currSession.commit()
+        currSession.close()
+        return giveResponse(result)
 
 
 def dbAdd(query):
+    result = ''
     sessionMake = sessionmaker(bind=engine)
     currSession = sessionMake()
-    #result = currSession.add_all(query)
-    for q in query:
-        currSession.merge(q)
-    #currSession.merge()
-    currSession.commit()
-    currSession.close()
-    return 's'
+    try:
+        result = currSession.add_all(query)
+    except IntegrityError:
+        pass
+    finally:
+        currSession.commit()
+        currSession.close()
+        return result
 
 
 def giveResponse(result):

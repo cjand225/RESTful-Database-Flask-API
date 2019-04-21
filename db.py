@@ -10,10 +10,10 @@ Base = declarative_base()
 class Location(Base):
     __tablename__ = 'location'
     # Columns
-    lid = Column(Integer, primary_key=True)
+    lid = Column('lid', Integer, primary_key=True, autoincrement=True)
     address = Column('address', String(100))
     # Relationship
-    services = relationship('Service')
+    services = relationship('Service', cascade="save-update, merge, delete")
 
     def __repr__(self):
         return "<Location(lid='%s', address='%s')>" % (
@@ -23,7 +23,7 @@ class Location(Base):
 class Institution(Base):
     __tablename__ = 'institution'
     # Columns
-    id = Column('id', String(100), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     tid = Column('tid', String(100))
     # Relationship
     departments = relationship('Department')
@@ -35,11 +35,9 @@ class Institution(Base):
 
 class Department(Base):
     __tablename__ = 'department'
-    __table_args__ = (
-        PrimaryKeyConstraint('id', 'institution_id'),
-    )
+
     # Columns
-    id = Column('id', String(100))
+    id = Column('id', String(100), primary_key=True)
     institution_id = Column('institution_id', ForeignKey('institution.id'))
     # Relationship
     institution = relationship('Institution')
@@ -60,7 +58,7 @@ class Service(Base):
     department_id = Column('department_id', ForeignKey('department.id'))
 
     # Relationship
-    patientData = relationship('Data')
+    patientData = relationship('Data', cascade="save-update, merge, delete")
 
     def __repr__(self):
         return "<Service(id='%s', location_id='%s', department_id='%s')>" % (
