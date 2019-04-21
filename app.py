@@ -168,7 +168,6 @@ def addPatient():
         attempted_provider = data['provider_id']
         attempted_pid = data['pid']
         attempted_ssn = data['ssn']
-        lid = uuid.uuid4()
 
         response = dbAdd([])
         return jsonify(response)
@@ -204,8 +203,20 @@ def addData():
 @app.route('/api/removeservice/<service_id>', methods=['GET'])
 def removeService(service_id):
     if request.method == "GET":
-        deleteQuery = delete(Service, Service.id == service_id)
-        response = dbDelete(deleteQuery)
+        result = ''
+        sessionMake = sessionmaker(bind=engine)
+        currSession = sessionMake()
+
+        try:
+            row = currSession.query(Service).get(service_id)
+            result = currSession.delete(row)
+        except IntegrityError:
+            pass
+        finally:
+            currSession.commit()
+            currSession.close()
+
+        response = giveResponse(result)
         return jsonify(response)
 
 
