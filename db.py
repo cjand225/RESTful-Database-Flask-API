@@ -13,7 +13,7 @@ class Location(Base):
     lid = Column('lid', Integer, unique=True, primary_key=True, autoincrement=True)
     address = Column('address', String(100))
     # Relationship
-    service = relationship('Service', cascade="save-update, merge, delete", back_populates="location")
+    servicesL = relationship('Service', cascade="save-update, merge, delete", back_populates="locationsS")
 
     def __repr__(self):
         return "<Location(lid='%s', address='%s')>" % (self.lid, self.address)
@@ -25,7 +25,7 @@ class Institution(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     tid = Column('tid', String(100))
     # Relationship
-    departments = relationship('Department')
+    departmentsI = relationship('Department', back_populates='institutionsD', cascade='save-update, merge, delete')
 
     def __repr__(self):
         return "<Institution(id='%s', tid='%s')>" % (
@@ -39,9 +39,9 @@ class Department(Base):
     id = Column('id', String(100), primary_key=True)
     institution_id = Column('institution_id', ForeignKey('institution.id'))
     # Relationship
-    institution = relationship('Institution')
-    services = relationship('Service')
-    providers = relationship('Provider')
+    institutionsD = relationship('Institution', back_populates='departmentsI', cascade='save-update, merge, delete')
+    servicesD = relationship('Service', back_populates='departmentsS', cascade='save-update, merge, delete')
+    providersD = relationship('Provider', back_populates='departmentsPr', cascade='save-update, merge, delete')
 
     def __repr__(self):
         return "<Department(id='%s', institution_id='%s')>" % (
@@ -57,8 +57,9 @@ class Service(Base):
     department_id = Column('department_id', ForeignKey('department.id'))
 
     # Relationship
-    patientData = relationship('Data', cascade="save-update, merge, delete")
-    location = relationship('Location', back_populates='service', cascade="save-update, merge, delete")
+    patientDataS = relationship('Data', cascade="save-update, merge, delete", backref='patient')
+    locationsS = relationship('Location', backref='_services', cascade="save-update, merge, delete")
+    departmentsS = relationship('Department', backref='services', cascade='save-update, merge, delete')
 
     def __repr__(self):
         return "<Service(id='%s', location_id='%s', department_id='%s')>" % (
@@ -71,7 +72,8 @@ class Provider(Base):
     npi = Column('npi', String(100), primary_key=True)
     department_id = Column('department_id', ForeignKey('department.id'))
     # Relationship
-    patients = relationship('Patient')
+    patientsPr = relationship('Patient', back_populates='providersPa', cascade='save-update, merge, delete')
+    departmentsPr = relationship('Department', back_populates='providersD', cascade='save-update, merge, delete')
 
     def __repr__(self):
         return "<Provider(npi='%s', department_id='%s')>" % (
@@ -87,6 +89,7 @@ class Patient(Base):
     provider_id = Column('provider_id', ForeignKey('provider.npi'))
 
     # Relationship
+    providersPa = relationship('Provider', back_populates='patientsPr', cascade='save-update, merge, delete')
     patientData = relationship('Data')
 
     def __repr__(self):

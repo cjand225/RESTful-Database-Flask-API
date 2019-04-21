@@ -72,7 +72,6 @@ def getService(service_id):
         sessionMake = sessionmaker(bind=engine)
         currSession = sessionMake()
         query = currSession.query(Service, Service.id).filter(Service.id == service_id)
-        query.join(Service.location)
         print(query)
         result = currSession.execute(query)
         response = giveResponse(result)
@@ -209,6 +208,7 @@ def removeService(service_id):
 
         try:
             row = currSession.query(Service).get(service_id)
+            print(row)
             result = currSession.delete(row)
         except IntegrityError:
             pass
