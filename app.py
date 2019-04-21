@@ -148,7 +148,7 @@ def addService():
         nService = Service(id=attempted_service, department_id=nDepartment.id, location_id=nLocation.lid)
 
         try:
-            result = currSession.add_all([nService])
+            result = currSession.add(nService)
         except IntegrityError:
             pass
         finally:
@@ -168,7 +168,7 @@ def addPatient():
         attempted_pid = data['pid']
         attempted_ssn = data['ssn']
 
-        response = dbAdd([])
+        response = ''
         return jsonify(response)
 
 
@@ -202,52 +202,19 @@ def addData():
 @app.route('/api/removeservice/<service_id>', methods=['GET'])
 def removeService(service_id):
     if request.method == "GET":
-        result = ''
-        sessionMake = sessionmaker(bind=engine)
-        currSession = sessionMake()
-
-        try:
-            row = currSession.query(Service).get(service_id)
-            print(row)
-            result = currSession.delete(row)
-        except IntegrityError:
-            pass
-        finally:
-            currSession.commit()
-            currSession.close()
-
-        response = giveResponse(result)
-        return jsonify(response)
+        return dbDelete(Service, service_id)
 
 
 @app.route('/api/removepatient/<pid>', methods=['GET'])
 def removePatient(pid):
     if request.method == "GET":
-        deleteQuery = delete(Patient, Patient.pid == pid)
-        response = dbDelete(deleteQuery)
-        return jsonify(response)
+        return dbDelete(Patient, pid)
 
 
 @app.route('/api/removeprovider/<npi>', methods=['GET'])
 def removeProvider(npi):
     if request.method == "GET":
-        deleteQuery = delete(Provider, Provider.npi == npi)
-        response = dbDelete(deleteQuery)
-        return jsonify(response)
-
-
-def dbDelete(query):
-    result = ''
-    sessionMake = sessionmaker(bind=engine)
-    currSession = sessionMake()
-    try:
-        result = currSession.delete(query)
-    except IntegrityError:
-        pass
-    finally:
-        currSession.commit()
-        currSession.close()
-        return giveResponse(result)
+        return dbDelete(Provider, npi)
 
 
 def dbAdd(query):
@@ -261,6 +228,25 @@ def dbAdd(query):
     finally:
         currSession.commit()
         return result
+
+
+def dbDelete(table, id):
+    result = ''
+    sessionMake = sessionmaker(bind=engine)
+    currSession = sessionMake()
+
+    try:
+        row = currSession.query(table).get(id)
+        print(row)
+        result = currSession.delete(row)
+    except IntegrityError:
+        pass
+    finally:
+        currSession.commit()
+        currSession.close()
+
+    response = giveResponse(result)
+    return jsonify(response)
 
 
 def giveResponse(result):
