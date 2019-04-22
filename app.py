@@ -69,15 +69,7 @@ def getStatus():
 @app.route('/api/getservice/<service_id>', methods=['GET'])
 def getService(service_id):
     if request.method == "GET":
-        sessionMake = sessionmaker(bind=engine)
-        currSession = sessionMake()
-        query = currSession.query(Service, Service.id).filter(Service.id == service_id)
-        print(query)
-        result = currSession.execute(query)
-        response = giveResponse(result)
-        currSession.commit()
-        currSession.close()
-        return jsonify(response)
+        return dbGet(Service, service_id)
 
 
 @app.route('/api/getpatient/<patient_id>', methods=['GET'])
@@ -295,6 +287,18 @@ def dbAdd(query):
     finally:
         currSession.commit()
         return result
+
+
+def dbGet(table, id):
+    sessionMake = sessionmaker(bind=engine)
+    currSession = sessionMake()
+    query = currSession.query(table, table.id).filter(table.id == id)
+    print(query)
+    result = currSession.execute(query)
+    response = giveResponse(result)
+    currSession.commit()
+    currSession.close()
+    return jsonify(response)
 
 
 def dbDelete(table, id):
