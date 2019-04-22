@@ -69,7 +69,7 @@ class Service(Base):
 class Provider(Base):
     __tablename__ = 'provider'
     # Columns
-    npi = Column('npi', String(100), primary_key=True)
+    id = Column('npi', String(100), primary_key=True)
     department_id = Column('department_id', ForeignKey('department.id'))
     # Relationship
     patientsPr = relationship('Patient', back_populates='providersPa', cascade='save-update, merge, delete')
@@ -77,24 +77,24 @@ class Provider(Base):
 
     def __repr__(self):
         return "<Provider(npi='%s', department_id='%s')>" % (
-            self.npi, self.department_id)
+            self.id, self.department_id)
 
 
 class Patient(Base):
     __tablename__ = 'patient'
     # Columns
-    pid = Column('pid', String(100), primary_key=True)
+    id = Column('pid', String(100), primary_key=True)
     ssn = Column('ssn', String(100))
     address = Column('address', String(100))
     provider_id = Column('provider_id', ForeignKey('provider.npi'))
 
     # Relationship
     providersPa = relationship('Provider', back_populates='patientsPr', cascade='save-update, merge, delete')
-    patientData = relationship('Data')
+    patientData = relationship('Data', back_populates='patientsDa', cascade='save-update, merge, delete')
 
     def __repr__(self):
         return "<Patient(pid='%s', ssn='%s', address='%s', provider_id='%s')>" % (
-            self.pid, self.ssn, self.address, self.provider_id)
+            self.id, self.ssn, self.address, self.provider_id)
 
 
 class Data(Base):
@@ -105,6 +105,8 @@ class Data(Base):
     patient_id = Column('patient_id', ForeignKey('patient.pid'))
     service_id = Column('service_id', ForeignKey('service.id'))
     some_data = Column('some_data', String(200))
+
+    patientsDa = relationship('Patient', back_populates='patientData', cascade='save-update, merge, delete')
 
     def __repr__(self):
         return "<Data(id='%s', ts='%s', patient_id='%s', service_id='%s', some_data='%s')>" % (

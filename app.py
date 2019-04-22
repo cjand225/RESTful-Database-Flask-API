@@ -3,15 +3,12 @@ from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 from json import dumps
 
+import datetime
 from db import Base, Location, Department, Provider, Patient, Data, Service, Institution
-# from newdb import metadata, location, department, provider, patient, data, service, institution
-
-from sqlalchemy import create_engine, ForeignKey, Table, MetaData, Column, Integer, String, DateTime, inspect, delete, \
-    select, insert, schema, types
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import IntegrityError
-import uuid
 
 # db_user = 'projectuser'
 # db_pass = 'cs405'
@@ -75,40 +72,19 @@ def getService(service_id):
 @app.route('/api/getpatient/<patient_id>', methods=['GET'])
 def getPatient(patient_id):
     if request.method == "GET":
-        sessionMake = sessionmaker(bind=engine)
-        currSession = sessionMake()
-        query = currSession.query(Service, Patient.pid).filter_by(id=patient_id)
-        result = currSession.execute(query)
-        response = giveResponse(result)
-        currSession.commit()
-        currSession.close()
-        return jsonify(response)
+        return dbGet(Patient, patient_id)
 
 
 @app.route('/api/getprovider/<provider_id>', methods=['GET'])
 def getProvider(provider_id):
     if request.method == "GET":
-        sessionMake = sessionmaker(bind=engine)
-        currSession = sessionMake()
-        query = currSession.query(Provider, Provider.npi).filter_by(id=provider_id)
-        result = currSession.execute(query)
-        response = giveResponse(result)
-        currSession.commit()
-        currSession.close()
-        return jsonify(response)
+        return dbGet(Provider, provider_id)
 
 
 @app.route('/api/getdata/<data_id>', methods=['GET'])
 def getData(data_id):
     if request.method == "GET":
-        sessionMake = sessionmaker(bind=engine)
-        currSession = sessionMake()
-        query = currSession.query(Data, Data.id).filter_by(id=data_id)
-        result = currSession.execute(query)
-        response = giveResponse(result)
-        currSession.commit()
-        currSession.close()
-        return jsonify(response)
+        return dbGet(Data, data_id)
 
 
 # Add--------------------------------------------
@@ -120,6 +96,9 @@ def addService():
         attempted_dept = data['department_id']
         attempted_service = data['service_id']
         attempted_tax = data['taxid']
+
+        if dbExists(Service, attempted_service):
+            return jsonify({'Status': '0', 'Error': 'Query Exists already in DB'})
 
         result = ''
         sessionMake = sessionmaker(bind=engine)
@@ -159,11 +138,14 @@ def addPatient():
         attempted_provider = data['provider_id']
         attempted_pid = data['pid']
         attempted_ssn = data['ssn']
-       
+
+        if dbExists(Patient, attempted_pid):
+            return jsonify({'Status': '0', 'Error': 'Query Exists already in DB'})
+
         result = ''
         sessionMake = sessionmaker(bind=engine)
         currSession = sessionMake()
-        nProvider = Provider(npi=attempted_provider)
+        nProvider = Provider(id=attempted_provider)
 
         try:
             result = currSession.add_all([nProvider])
@@ -172,7 +154,7 @@ def addPatient():
         finally:
             currSession.commit()
 
-        nPatient = Patient(pid=attempted_pid,ssn=attempted_ssn,address=attempted_address,provider_id = nProvider.npi)
+        nPatient = Patient(id=attempted_pid, ssn=attempted_ssn, address=attempted_address, provider_id=nProvider.id)
 
         try:
             result = currSession.add_all([nPatient])
@@ -192,12 +174,14 @@ def addProvider():
         data = request.get_json(force=True)
         attempted_dept = data['department_id']
         attempted_npi = data['npi']
-       
+
+        if dbExists(Provider, attempted_npi):
+            return jsonify({'Status': '0', 'Error': 'Query Exists already in DB'})
+
         result = ''
         sessionMake = sessionmaker(bind=engine)
         currSession = sessionMake()
         nDepartment = Department(id=attempted_dept)
-
 
         try:
             result = currSession.add_all([nDepartment])
@@ -206,7 +190,7 @@ def addProvider():
         finally:
             currSession.commit()
 
-        nProvider = Provider(npi=attempted_npi,department_id=nDepartment.id)
+        nProvider = Provider(id=attempted_npi, department_id=nDepartment.id)
 
         try:
             result = currSession.add_all([nProvider])
@@ -219,6 +203,7 @@ def addProvider():
         response = giveResponse(result)
         return jsonify(response)
 
+
 @app.route('/api/adddata/', methods=['POST'])
 def addData():
     if request.method == "POST":
@@ -229,22 +214,25 @@ def addData():
         attempted_provid = data['provider_id']
         attempted_did = data['id']
 
-       
+        if dbExists(Data, attempted_did):
+            return jsonify({'Status': '0', 'Error': 'Query Exists already in DB'})
+
         result = ''
         sessionMake = sessionmaker(bind=engine)
         currSession = sessionMake()
-        nPatient = Patient(pid=attempted_pid)
+        nPatient = Patient(id=attempted_pid)
         nService = Service(id=attempted_sid)
-        nProvider = Provider(npi=attempted_provid)
+        nProvider = Provider(id=attempted_provid)
 
         try:
-            result = currSession.add_all([nPatient,nService,nProvider])
+            result = currSession.add_all([nPatient, nService, nProvider])
         except IntegrityError:
             pass
         finally:
             currSession.commit()
 
-        nData = data(id=attempted_did, patient_id=nPatient.pid,service_id=nService.id,some_data=attempted_data)
+        nData = Data(id=attempted_did, patient_id=nPatient.id, service_id=nService.id, some_data=attempted_data,
+                     ts=datetime.datetime.utcnow())
 
         try:
             result = currSession.add_all([nData])
@@ -321,9 +309,24 @@ def dbDelete(table, id):
     return jsonify(response)
 
 
+def dbExists(table, id):
+    response = False
+    sessionMake = sessionmaker(bind=engine)
+    currSession = sessionMake()
+    query = currSession.query(table, table.id).filter(table.id == id)
+    result = currSession.execute(query)
+    currSession.commit()
+    currSession.close()
+
+    if result:
+        if result.returns_rows and result.rowcount > 0:
+            response = True
+
+    return response
+
+
 def giveResponse(result):
     response = {}
-
     if result:
         if result.returns_rows and result.rowcount > 0:
             for row in result.fetchall():
