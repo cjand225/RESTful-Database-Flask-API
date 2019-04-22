@@ -167,8 +167,30 @@ def addPatient():
         attempted_provider = data['provider_id']
         attempted_pid = data['pid']
         attempted_ssn = data['ssn']
+       
+        result = ''
+        sessionMake = sessionmaker(bind=engine)
+        currSession = sessionMake()
+        nProvider = Provider(npi=attempted_provider)
 
-        response = ''
+        try:
+            result = currSession.add_all([nProvider])
+        except IntegrityError:
+            pass
+        finally:
+            currSession.commit()
+
+        nPatient = Patient(pid=attempted_pid,ssn=attempted_ssn,address=attempted_address,provider_id = nProvider.npi)
+
+        try:
+            result = currSession.add_all([nPatient])
+        except IntegrityError:
+            pass
+        finally:
+            currSession.commit()
+            currSession.close()
+
+        response = giveResponse(result)
         return jsonify(response)
 
 
@@ -178,12 +200,32 @@ def addProvider():
         data = request.get_json(force=True)
         attempted_dept = data['department_id']
         attempted_npi = data['npi']
+       
+        result = ''
+        sessionMake = sessionmaker(bind=engine)
+        currSession = sessionMake()
+        nDepartment = Department(id=attempted_dept)
 
-        nProvider = Provider()
 
-        response = dbAdd([])
+        try:
+            result = currSession.add_all([nDepartment])
+        except IntegrityError:
+            pass
+        finally:
+            currSession.commit()
+
+        nProvider = Provider(npi=attempted_npi,department_id=nDepartment.id)
+
+        try:
+            result = currSession.add_all([nProvider])
+        except IntegrityError:
+            pass
+        finally:
+            currSession.commit()
+            currSession.close()
+
+        response = giveResponse(result)
         return jsonify(response)
-
 
 @app.route('/api/adddata/', methods=['POST'])
 def addData():
@@ -194,7 +236,32 @@ def addData():
         attempted_sid = data['service_id']
         attempted_provid = data['provider_id']
         attempted_did = data['id']
-        response = dbAdd([])
+       
+        result = ''
+        sessionMake = sessionmaker(bind=engine)
+        currSession = sessionMake()
+        nPatient = Patient(pid=attempted_pid)
+        nService = Service(id=attempted_sid)
+        nProvider = Provider(npi=attempted_provid)
+
+        try:
+            result = currSession.add_all([nPatient,nService,nProvider])
+        except IntegrityError:
+            pass
+        finally:
+            currSession.commit()
+
+        nData = data(id=attempted_did, patient_id=nPatient.pid,service_id=nService.id)
+
+        try:
+            result = currSession.add_all([nData])
+        except IntegrityError:
+            pass
+        finally:
+            currSession.commit()
+            currSession.close()
+
+        response = giveResponse(result)
         return jsonify(response)
 
 
