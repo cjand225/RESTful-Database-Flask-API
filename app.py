@@ -228,6 +228,7 @@ def addData():
         attempted_sid = data['service_id']
         attempted_provid = data['provider_id']
         attempted_did = data['id']
+
        
         result = ''
         sessionMake = sessionmaker(bind=engine)
@@ -243,7 +244,7 @@ def addData():
         finally:
             currSession.commit()
 
-        nData = data(id=attempted_did, patient_id=nPatient.pid,service_id=nService.id)
+        nData = data(id=attempted_did, patient_id=nPatient.pid,service_id=nService.id,some_data=attempted_data)
 
         try:
             result = currSession.add_all([nData])
