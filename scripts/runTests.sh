@@ -5,7 +5,7 @@ if [ ! -d $DIR/logs ];then
     sh -c "mkdir $DIR/logs"
 fi
 
-for filename in $DIR/*.sh; do
-    sh -x $filename >> "logs/$(basename "$filename").log"
+for filename in $DIR/tests/*.sh; do
+    sh -x $filename >> "logs/$(basename "$filename" .sh).log"
     sleep 5
 done
