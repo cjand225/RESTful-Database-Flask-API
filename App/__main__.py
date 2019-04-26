@@ -90,6 +90,12 @@ def getData(data_id):
 def addService():
     if request.method == "POST":
         data = request.get_json(force=True)
+
+        # check if valid amount and correct parameters given
+        params = ['address', 'department_id', 'service_id', 'taxid']
+        if not all(name in data for name in params):
+            return jsonify({'Status': '0', 'Error': 'Invalid Amount of Parameters'})
+
         attempted_address = data['address']
         attempted_dept = data['department_id']
         attempted_service = data['service_id']
@@ -132,6 +138,12 @@ def addService():
 def addPatient():
     if request.method == "POST":
         data = request.get_json(force=True)
+
+        # check if valid amount and correct parameters given
+        params = ['address', 'provider_id', 'pid', 'ssn']
+        if not all(name in data for name in params):
+            return jsonify({'Status': '0', 'Error': 'Invalid Amount of Parameters'})
+
         attempted_address = data['address']
         attempted_provider = data['provider_id']
         attempted_pid = data['pid']
@@ -170,6 +182,12 @@ def addPatient():
 def addProvider():
     if request.method == "POST":
         data = request.get_json(force=True)
+
+        # check if valid amount and correct parameters given
+        params = ['department_id', 'npi']
+        if not all(name in data for name in params):
+            return jsonify({'Status': '0', 'Error': 'Invalid Amount of Parameters'})
+
         attempted_dept = data['department_id']
         attempted_npi = data['npi']
 
@@ -206,6 +224,12 @@ def addProvider():
 def addData():
     if request.method == "POST":
         data = request.get_json(force=True)
+
+        # check if valid amount and correct parameters given
+        params = ['data', 'patient_id', 'service_id', 'provider_id', 'id']
+        if not all(name in data for name in params):
+            return jsonify({'Status': '0', 'Error': 'Invalid Amount of Parameters'})
+
         attempted_data = data['data']
         attempted_pid = data['patient_id']
         attempted_sid = data['service_id']
