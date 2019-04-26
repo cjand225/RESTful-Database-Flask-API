@@ -1,3 +1,7 @@
-recursive-include scripts/*
+recursive-include scripts *
+include scripts/logs
+include scripts/tests/*.sh
+include scripts/*.sh
 include *.txt
+include *.sh
 global-exclude .gitignore
