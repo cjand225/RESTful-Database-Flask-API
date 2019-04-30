@@ -18,11 +18,11 @@ db_pass = 'test'
 db_name = 'testdb'
 
 db = {'drivername': 'mysql',
-      'username': 'testuser',
-      'password': 'test',
+      'username': 'projectuser',
+      'password': 'cs405',
       'host': 'cjan225.netlab.uky.edu',
       'port': 3306,
-      'database': 'testdb'}
+      'database': 'classproject'}
 
 url = URL(**db)
 app = Flask(__name__)
