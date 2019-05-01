@@ -8,21 +8,19 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import IntegrityError
 
-# db_user = 'projectuser'
-# db_pass = 'cs405'
-# db_name = 'classproject'
-
+db_type = 'mysql'
 db_host = 'cjan225.netlab.uky.edu'
+db_port = 3306
 db_user = 'testuser'
 db_pass = 'test'
 db_name = 'testdb'
 
-db = {'drivername': 'mysql',
-      'username': 'projectuser',
-      'password': 'cs405',
-      'host': 'cjan225.netlab.uky.edu',
-      'port': 3306,
-      'database': 'classproject'}
+db = {'drivername': db_type,
+      'username': db_user,
+      'password': db_pass,
+      'host': db_host,
+      'port': db_port,
+      'database': db_name}
 
 url = URL(**db)
 app = Flask(__name__)
@@ -64,25 +62,33 @@ def getStatus():
 @app.route('/api/getservice/<service_id>', methods=['GET'])
 def getService(service_id):
     if request.method == "GET":
-        return dbGet(Service, service_id)
+        responseDict = dbGet(Service, service_id)
+        nDict = fixResponse('service_', responseDict)
+        return nDict
 
 
 @app.route('/api/getpatient/<patient_id>', methods=['GET'])
 def getPatient(patient_id):
     if request.method == "GET":
-        return dbGet(Patient, patient_id)
+        responseDict = dbGet(Patient, patient_id)
+        nDict = fixResponse('patient_', responseDict)
+        return nDict
 
 
 @app.route('/api/getprovider/<provider_id>', methods=['GET'])
 def getProvider(provider_id):
     if request.method == "GET":
-        return dbGet(Provider, provider_id)
+        responseDict = dbGet(Provider, provider_id)
+        nDict = fixResponse('provider_', responseDict)
+        return nDict
 
 
 @app.route('/api/getdata/<data_id>', methods=['GET'])
 def getData(data_id):
     if request.method == "GET":
-        return dbGet(Data, data_id)
+        responseDict = dbGet(Data, data_id)
+        nDict = fixResponse('data_', responseDict)
+        return nDict
 
 
 # Add--------------------------------------------
@@ -226,14 +232,14 @@ def addData():
         data = request.get_json(force=True)
 
         # check if valid amount and correct parameters given
-        params = ['data', 'patient_id', 'service_id', 'provider_id', 'id']
+        params = ['data', 'patient_id', 'service_id', 'id']
         if not all(name in data for name in params):
             return jsonify({'Status': '0', 'Error': 'Invalid Amount of Parameters'})
 
         attempted_data = data['data']
         attempted_pid = data['patient_id']
         attempted_sid = data['service_id']
-        attempted_provid = data['provider_id']
+        # attempted_provid = data['provider_id']
         attempted_did = data['id']
 
         if dbExists(Data, attempted_did):
@@ -244,10 +250,10 @@ def addData():
         currSession = sessionMake()
         nPatient = Patient(id=attempted_pid)
         nService = Service(id=attempted_sid)
-        nProvider = Provider(id=attempted_provid)
+        # nProvider = Provider(id=attempted_provid)
 
         try:
-            result = currSession.add_all([nPatient, nService, nProvider])
+            result = currSession.add_all([nPatient, nService])
         except IntegrityError:
             pass
         finally:
@@ -287,19 +293,6 @@ def removeProvider(npi):
         return dbDelete(Provider, npi)
 
 
-def dbAdd(query):
-    result = ''
-    sessionMake = sessionmaker(bind=engine)
-    currSession = sessionMake()
-    try:
-        result = currSession.add_all(query)
-    except IntegrityError:
-        pass
-    finally:
-        currSession.commit()
-        return result
-
-
 def dbGet(table, id):
     sessionMake = sessionmaker(bind=engine)
     currSession = sessionMake()
@@ -309,7 +302,7 @@ def dbGet(table, id):
     response = giveResponse(result)
     currSession.commit()
     currSession.close()
-    return jsonify(response)
+    return response
 
 
 def dbDelete(table, id):
@@ -359,6 +352,14 @@ def giveResponse(result):
         response.update({'Status': '1'})
 
     return response
+
+
+def fixResponse(keyFix, dict):
+    ndict = {}
+    for key, value in dict.items():
+        newKey = key.split(keyFix)[1]
+        ndict[newKey] = value
+    return jsonify(ndict)
 
 
 if __name__ == '__main__':
