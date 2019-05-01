@@ -100,7 +100,7 @@ def addService():
         # check if valid amount and correct parameters given
         params = ['address', 'department_id', 'service_id', 'taxid']
         if not all(name in data for name in params):
-            return jsonify({'Status': '0', 'Error': 'Invalid Amount of Parameters'})
+            return jsonify({'Status': '0'})
 
         attempted_address = data['address']
         attempted_dept = data['department_id']
@@ -108,7 +108,7 @@ def addService():
         attempted_tax = data['taxid']
 
         if dbExists(Service, attempted_service):
-            return jsonify({'Status': '0', 'Error': 'Query Exists already in DB'})
+            return jsonify({'Status': '0'})
 
         result = ''
         sessionMake = sessionmaker(bind=engine)
@@ -148,7 +148,7 @@ def addPatient():
         # check if valid amount and correct parameters given
         params = ['address', 'provider_id', 'pid', 'ssn']
         if not all(name in data for name in params):
-            return jsonify({'Status': '0', 'Error': 'Invalid Amount of Parameters'})
+            return jsonify({'Status': '0'})
 
         attempted_address = data['address']
         attempted_provider = data['provider_id']
@@ -156,7 +156,7 @@ def addPatient():
         attempted_ssn = data['ssn']
 
         if dbExists(Patient, attempted_pid):
-            return jsonify({'Status': '0', 'Error': 'Query Exists already in DB'})
+            return jsonify({'Status': '0'})
 
         result = ''
         sessionMake = sessionmaker(bind=engine)
@@ -192,13 +192,13 @@ def addProvider():
         # check if valid amount and correct parameters given
         params = ['department_id', 'npi']
         if not all(name in data for name in params):
-            return jsonify({'Status': '0', 'Error': 'Invalid Amount of Parameters'})
+            return jsonify({'Status': '0'})
 
         attempted_dept = data['department_id']
         attempted_npi = data['npi']
 
         if dbExists(Provider, attempted_npi):
-            return jsonify({'Status': '0', 'Error': 'Query Exists already in DB'})
+            return jsonify({'Status': '0'})
 
         result = ''
         sessionMake = sessionmaker(bind=engine)
@@ -234,7 +234,7 @@ def addData():
         # check if valid amount and correct parameters given
         params = ['data', 'patient_id', 'service_id', 'id']
         if not all(name in data for name in params):
-            return jsonify({'Status': '0', 'Error': 'Invalid Amount of Parameters'})
+            return jsonify({'Status': '0'})
 
         attempted_data = data['data']
         attempted_pid = data['patient_id']
@@ -243,7 +243,7 @@ def addData():
         attempted_did = data['id']
 
         if dbExists(Data, attempted_did):
-            return jsonify({'Status': '0', 'Error': 'Query Exists already in DB'})
+            return jsonify({'Status': '0'})
 
         result = ''
         sessionMake = sessionmaker(bind=engine)
@@ -347,7 +347,7 @@ def giveResponse(result):
             for row in result.fetchall():
                 response.update(row)
         elif result.rowcount == 0:
-            response.update({'Error': 'Not Found'})
+            response.update({'Status': '0'})
     else:
         response.update({'Status': '1'})
 
