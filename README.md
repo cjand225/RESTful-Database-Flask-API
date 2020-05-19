@@ -27,8 +27,7 @@
     Incorrent Amount of Parameters
 
 ## Notes
-
-Not a lot of testing was done, but testing scripts and an semi-automated testing can be found in /scripts folder
+testing scripts and an semi-automated testing can be found in /scripts folder
 
 Make sure to put any scripts you want to test in scripts/tests, then you can just use the following:
 
